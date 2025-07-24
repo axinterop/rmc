@@ -11,17 +11,17 @@ impl Token {
         self.value.len()
     }
 
-    fn end_of_file() -> Token {
+    fn eof() -> Token {
         Token {
             type_: TokenType::Eof,
-            value: String::from(""),
+            value: String::from("<EOF>"),
         }
     }
 
     fn dummy() -> Token {
         Token {
             type_: TokenType::Dummy,
-            value: String::from("x"),
+            value: String::from("<DUMMY>"),
         }
     }
 }
@@ -33,6 +33,8 @@ enum TokenType {
     Underscore,
     Star,
     Newline,
+    // Complex
+    Text,
 }
 
 struct Tokenizer;
@@ -52,33 +54,49 @@ impl Scanner for SimpleScanner {
             '\n' => TokenType::Newline,
             _ => return None,
         };
-        Some(Token {
-            type_: token_type,
-            value: first_char.to_string(),
-        })
+        Some(Token::new(token_type, first_char.to_string()))
+    }
+}
+
+impl Scanner for TextScanner {
+    fn scan(input: &str) -> Option<Token> {
+        let text = input
+            .chars()
+            .take_while(|&c| !matches!(c, '_' | '*' | '\n'))
+            .collect::<String>();
+
+        if text.is_empty() {
+            None
+        } else {
+            Some(Token::new(TokenType::Text, text.to_string()))
+        }
     }
 }
 
 impl Tokenizer {
-    pub fn tokenize(plain_markdown: String) -> Vec<Token> {
+    pub fn tokenize(plain_markdown: &str) -> Vec<Token> {
         let mut tokens = Vec::new();
-        let mut draft_markdown = plain_markdown.clone();
-        while !draft_markdown.is_empty() {
-            let token = Self::scan_one_token(&draft_markdown);
-            draft_markdown.truncate(draft_markdown.len() - token.len());
-            tokens.push(token);
+        let mut remaining = plain_markdown;
+        while !remaining.is_empty() {
+            if let Some(token) = Self::scan_one_token(remaining) {
+                remaining = &remaining[token.len()..];
+                tokens.push(token);
+            } else {
+                // Handle unexpected characters if needed
+                break;
+            }
         }
-        tokens.push(Token::end_of_file());
+        tokens.push(Token::eof());
         tokens
     }
 
-    fn scan_one_token(markdown: &String) -> Token {
-        Token::dummy()
+    fn scan_one_token(input: &str) -> Option<Token> {
+        SimpleScanner::scan(input).or_else(|| TextScanner::scan(input))
     }
 }
 
 fn main() {
-    let markdown = String::from("*Hello*");
+    let markdown = "_Hello_";
     let tokens = Tokenizer::tokenize(markdown);
     for i in 0..tokens.len() {
         println!("{i}: {}", tokens[i].value);
