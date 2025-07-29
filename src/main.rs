@@ -82,7 +82,7 @@ impl Tokenizer {
                 remaining = &remaining[token.len()..];
                 tokens.push(token);
             } else {
-                // Handle unexpected characters if needed
+                println!("Unknown character, stopping...");
                 break;
             }
         }
