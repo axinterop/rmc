@@ -105,7 +105,7 @@ fn main() {
 }
 
 #[cfg(test)]
-mod tests {
+mod tests_tokenize {
     use super::*;
 
     fn assert_vecs(vec1: &Vec<Token>, vec2: &Vec<Token>) {
@@ -117,7 +117,7 @@ mod tests {
     }
 
     #[test]
-    fn emphesize_simple() {
+    fn emphesize_underscore_simple() {
         let input = "_Hello_";
         let tokens = Tokenizer::tokenize(input);
         let result = vec![
@@ -130,13 +130,43 @@ mod tests {
     }
 
     #[test]
-    fn emphesize_simple_space() {
-        let input = "_Hello _";
+    fn emphesize_star_simple() {
+        let input = "*Hello*";
+        let tokens = Tokenizer::tokenize(input);
+        let result = vec![
+            Token::new(TokenType::Star, "*".to_string()),
+            Token::new(TokenType::Text, "Hello".to_string()),
+            Token::new(TokenType::Star, "*".to_string()),
+            Token::eof(),
+        ];
+        assert_vecs(&tokens, &result);
+    }
+
+    #[test]
+    fn bold_underscore_simple() {
+        let input = "__Hello__";
         let tokens = Tokenizer::tokenize(input);
         let result = vec![
             Token::new(TokenType::Underscore, "_".to_string()),
-            Token::new(TokenType::Text, "Hello ".to_string()),
             Token::new(TokenType::Underscore, "_".to_string()),
+            Token::new(TokenType::Text, "Hello".to_string()),
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::eof(),
+        ];
+        assert_vecs(&tokens, &result);
+    }
+
+    #[test]
+    fn bold_star_simple() {
+        let input = "**Hello**";
+        let tokens = Tokenizer::tokenize(input);
+        let result = vec![
+            Token::new(TokenType::Star, "*".to_string()),
+            Token::new(TokenType::Star, "*".to_string()),
+            Token::new(TokenType::Text, "Hello".to_string()),
+            Token::new(TokenType::Star, "*".to_string()),
+            Token::new(TokenType::Star, "*".to_string()),
             Token::eof(),
         ];
         assert_vecs(&tokens, &result);
