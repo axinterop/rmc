@@ -26,6 +26,7 @@ impl Token {
     }
 }
 
+#[derive(PartialEq)]
 enum TokenType {
     Eof,
     Dummy, // temporary
@@ -100,5 +101,44 @@ fn main() {
     let tokens = Tokenizer::tokenize(markdown);
     for i in 0..tokens.len() {
         println!("{i}: {}", tokens[i].value);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn assert_vecs(vec1: &Vec<Token>, vec2: &Vec<Token>) {
+        assert!(vec1.len() == vec2.len());
+        for i in 0..vec1.len() {
+            assert!(vec1[i].type_ == vec2[i].type_);
+            assert!(vec1[i].value == vec2[i].value);
+        }
+    }
+
+    #[test]
+    fn emphesize_simple() {
+        let input = "_Hello_";
+        let tokens = Tokenizer::tokenize(input);
+        let result = vec![
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::new(TokenType::Text, "Hello".to_string()),
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::eof(),
+        ];
+        assert_vecs(&tokens, &result);
+    }
+
+    #[test]
+    fn emphesize_simple_space() {
+        let input = "_Hello _";
+        let tokens = Tokenizer::tokenize(input);
+        let result = vec![
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::new(TokenType::Text, "Hello ".to_string()),
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::eof(),
+        ];
+        assert_vecs(&tokens, &result);
     }
 }
