@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 struct Token {
     type_: TokenType,
     value: String,
@@ -93,6 +95,44 @@ impl Tokenizer {
 
     fn scan_one_token(input: &str) -> Option<Token> {
         SimpleScanner::scan(input).or_else(|| TextScanner::scan(input))
+    }
+}
+
+struct Node {
+    type_: NodeType,
+    value: String,
+}
+
+impl Node {
+    fn new(type_: NodeType, value: String) -> Node {
+        Node { type_, value }
+    }
+}
+
+enum NodeType {
+    Text,
+    Emphasize,
+    Bold,
+}
+
+trait Parser {
+    fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node>;
+}
+
+struct TextParser;
+struct BoldParser;
+struct EmphasizeParser;
+struct SentenceParser;
+
+impl Parser for TextParser {
+    fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node> {
+        let f = tokens.first()?;
+
+        if f.type_ == TokenType::Text {
+            Some(Node::new(NodeType::Text, f.value.clone()))
+        } else {
+            None
+        }
     }
 }
 
