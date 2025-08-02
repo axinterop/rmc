@@ -65,6 +65,37 @@ impl Parser for EmphasizeParser {
     }
 }
 
+impl Parser for BoldParser {
+    fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node> {
+        if tokens.len() < 5 {
+            return None;
+        };
+        let rule_underscore = [
+            TokenType::Underscore,
+            TokenType::Underscore,
+            TokenType::Text,
+            TokenType::Underscore,
+            TokenType::Underscore,
+        ];
+        let rule_star = [
+            TokenType::Star,
+            TokenType::Star,
+            TokenType::Text,
+            TokenType::Star,
+            TokenType::Star,
+        ];
+
+        for i in 0..5 {
+            if tokens[i].type_ != rule_underscore[i] && tokens[i].type_ != rule_star[i] {
+                return None;
+            }
+        }
+        let value = tokens[2].value.clone();
+        tokens.drain(0..5);
+        Some(Node::new(NodeType::Bold, value))
+    }
+}
+
 #[cfg(test)]
 mod tests_parsers {
     use super::*;
@@ -114,14 +145,62 @@ mod tests_parsers {
     #[test]
     fn emphasize_star_simple() {
         let mut tokens = vec![
-            Token::new(TokenType::Underscore, "*".to_string()),
+            Token::new(TokenType::Star, "*".to_string()),
             Token::new(TokenType::Text, "Hello".to_string()),
-            Token::new(TokenType::Underscore, "*".to_string()),
+            Token::new(TokenType::Star, "*".to_string()),
             Token::eof(),
         ];
 
         let result = EmphasizeParser::match_tokens(&mut tokens);
         let expected = Some(Node::new(NodeType::Emphasize, "Hello".to_string()));
+        assert!(result.is_some());
+        assert!(expected.is_some());
+
+        let result = result.unwrap();
+        let expected = expected.unwrap();
+        assert!(result.type_ == expected.type_);
+        assert!(result.value == expected.value);
+
+        assert!(tokens.len() == 1); // Should consume matched tokens
+    }
+
+    #[test]
+    fn bold_underscore_simple() {
+        let mut tokens = vec![
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::new(TokenType::Text, "Hello".to_string()),
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::eof(),
+        ];
+
+        let result = BoldParser::match_tokens(&mut tokens);
+        let expected = Some(Node::new(NodeType::Bold, "Hello".to_string()));
+        assert!(result.is_some());
+        assert!(expected.is_some());
+
+        let result = result.unwrap();
+        let expected = expected.unwrap();
+        assert!(result.type_ == expected.type_);
+        assert!(result.value == expected.value);
+
+        assert!(tokens.len() == 1); // Should consume matched tokens
+    }
+
+    #[test]
+    fn bold_star_simple() {
+        let mut tokens = vec![
+            Token::new(TokenType::Star, "*".to_string()),
+            Token::new(TokenType::Star, "*".to_string()),
+            Token::new(TokenType::Text, "Hello".to_string()),
+            Token::new(TokenType::Star, "*".to_string()),
+            Token::new(TokenType::Star, "*".to_string()),
+            Token::eof(),
+        ];
+
+        let result = BoldParser::match_tokens(&mut tokens);
+        let expected = Some(Node::new(NodeType::Bold, "Hello".to_string()));
         assert!(result.is_some());
         assert!(expected.is_some());
 
