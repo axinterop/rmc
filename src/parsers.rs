@@ -32,9 +32,9 @@ impl Parser for TextParser {
         if tokens.is_empty() {
             return None;
         }
-        let f = tokens.remove(0);
 
-        if f.type_ == TokenType::Text {
+        if tokens[0].type_ == TokenType::Text {
+            let f = tokens.remove(0);
             Some(Node::new(NodeType::Text, f.value.clone()))
         } else {
             None
@@ -118,6 +118,20 @@ mod tests_parsers {
         assert!(result.value == expected.value);
 
         assert!(tokens.len() == 1); // Should consume matched token
+    }
+
+    #[test]
+    fn text_simple_none() {
+        let mut tokens = vec![
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::new(TokenType::Text, "Hello".to_string()),
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::eof(),
+        ];
+
+        let result = TextParser::match_tokens(&mut tokens);
+        assert!(result.is_none());
+        assert!(tokens.len() == 4) // Should consume matched token
     }
 
     #[test]
