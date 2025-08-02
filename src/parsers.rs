@@ -96,6 +96,22 @@ impl Parser for BoldParser {
     }
 }
 
+impl Parser for SentenceParser {
+    fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node> {
+        let parsers: Vec<fn(&mut Vec<Token>) -> Option<Node>> = vec![
+            EmphasizeParser::match_tokens,
+            BoldParser::match_tokens,
+            TextParser::match_tokens,
+        ];
+        for parser in parsers {
+            if let Some(node) = parser(tokens) {
+                return Some(node);
+            }
+        }
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests_parsers {
     use super::*;
@@ -224,5 +240,35 @@ mod tests_parsers {
         assert!(result.value == expected.value);
 
         assert!(tokens.len() == 1); // Should consume matched tokens
+    }
+
+    #[test]
+    fn sentence_simple_all() {
+        let mut tokens = vec![Token::new(TokenType::Text, "Hello".to_string())];
+        let result = SentenceParser::match_tokens(&mut tokens);
+        assert!(result.is_some());
+        assert!(result.unwrap().type_ == NodeType::Text);
+
+        let mut tokens = vec![
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::new(TokenType::Text, "Hello".to_string()),
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::eof(),
+        ];
+        let result = SentenceParser::match_tokens(&mut tokens);
+        assert!(result.is_some());
+        assert!(result.unwrap().type_ == NodeType::Emphasize);
+
+        let mut tokens = vec![
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::new(TokenType::Text, "Hello".to_string()),
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::new(TokenType::Underscore, "_".to_string()),
+            Token::eof(),
+        ];
+        let result = SentenceParser::match_tokens(&mut tokens);
+        assert!(result.is_some());
+        assert!(result.unwrap().type_ == NodeType::Bold);
     }
 }
