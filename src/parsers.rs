@@ -1,9 +1,9 @@
 use crate::tokenizer::*;
 
-struct Node {
-    type_: NodeType,
-    value: String,
-    children: Vec<Node>,
+pub struct Node {
+    pub type_: NodeType,
+    pub value: String,
+    pub children: Vec<Node>,
 }
 
 impl Node {
@@ -25,7 +25,7 @@ impl Node {
 }
 
 #[derive(PartialEq)]
-enum NodeType {
+pub enum NodeType {
     Text,
     Emphasize,
     Bold,
@@ -34,11 +34,11 @@ enum NodeType {
     Body,
 }
 
-trait BaseParser {
+pub trait BaseParser {
     fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node>;
 }
 
-struct Parser;
+pub struct Parser;
 struct TextParser;
 struct BoldParser;
 struct EmphasizeParser;
@@ -187,7 +187,7 @@ impl BaseParser for BodyParser {
 }
 
 #[cfg(test)]
-mod tests_parsers {
+mod tests {
     use super::*;
 
     fn assert_vecs(vec1: &Vec<Node>, vec2: &Vec<Node>) {

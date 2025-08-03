@@ -89,7 +89,7 @@ impl Tokenizer {
 }
 
 #[cfg(test)]
-mod tests_tokenize {
+mod tests {
     use super::*;
 
     fn assert_vecs(vec1: &Vec<Token>, vec2: &Vec<Token>) {
