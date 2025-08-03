@@ -1,9 +1,4 @@
-mod markdown;
-mod parsers;
-mod tokenizer;
-mod visitors;
-
-use crate::markdown::Markdown;
+use rmc::Markdown;
 
 fn main() {
     let markdown = "__Foo__ and *bar*.\n\nAnother paragraph.";
