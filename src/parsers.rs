@@ -18,6 +18,10 @@ impl Node {
     fn new_paragraph() -> Node {
         Self::new(NodeType::Paragraph, "".to_string())
     }
+
+    fn new_body() -> Node {
+        Self::new(NodeType::Body, "".to_string())
+    }
 }
 
 #[derive(PartialEq)]
@@ -27,6 +31,7 @@ enum NodeType {
     Bold,
 
     Paragraph,
+    Body,
 }
 
 trait Parser {
@@ -38,6 +43,7 @@ struct BoldParser;
 struct EmphasizeParser;
 struct SentenceParser;
 struct ParagraphParser;
+struct BodyParser;
 
 impl Parser for TextParser {
     fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node> {
@@ -134,6 +140,12 @@ impl Parser for ParagraphParser {
         while let Some(node) = SentenceParser::match_tokens(tokens) {
             paragraph.children.push(node);
         }
+
+        if tokens[0].type_ == TokenType::Eof {
+            tokens.drain(0..1);
+            return Some(paragraph);
+        }
+
         match (&tokens[0].type_, &tokens[1].type_) {
             (TokenType::Newline, TokenType::Newline) => {
                 tokens.drain(0..2);
@@ -144,6 +156,25 @@ impl Parser for ParagraphParser {
                 Some(paragraph)
             }
             _ => None,
+        }
+    }
+}
+
+impl Parser for BodyParser {
+    fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node> {
+        if tokens.is_empty() {
+            return None;
+        };
+
+        let mut body = Node::new_body();
+        while let Some(node) = ParagraphParser::match_tokens(tokens) {
+            body.children.push(node);
+        }
+
+        if !body.children.is_empty() {
+            Some(body)
+        } else {
+            None
         }
     }
 }
@@ -161,7 +192,25 @@ mod tests_parsers {
     }
 
     #[test]
-    fn paragraph() {
+    fn body_simple() {
+        let markdown = "__Foo__ and *bar*.\n\nAnother paragraph.";
+        let mut tokens = Tokenizer::tokenize(markdown);
+        let result = BodyParser::match_tokens(&mut tokens);
+        assert!(result.is_some());
+        let result = result.unwrap();
+
+        assert!(tokens.len() == 0); // Consumed all tokens
+
+        assert!(result.children.len() == 2); // 2 paragraphs
+        assert!(result.children[0].type_ == NodeType::Paragraph);
+        assert!(result.children[1].type_ == NodeType::Paragraph);
+
+        assert!(result.children[0].children.len() == 4); // First paragraph has 4 sentences
+        assert!(result.children[1].children.len() == 1); // First paragraph has 1 sentence
+    }
+
+    #[test]
+    fn paragraph_simple() {
         let markdown = "__Foo__ and *bar*\n\n";
         let mut tokens = Tokenizer::tokenize(markdown);
         let result = ParagraphParser::match_tokens(&mut tokens);
