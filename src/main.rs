@@ -1,15 +1,11 @@
+mod markdown;
 mod parsers;
 mod tokenizer;
 mod visitors;
 
-use crate::parsers::{BaseParser, Parser};
-use crate::tokenizer::Tokenizer;
-use crate::visitors::{BaseVisitor, Visitor};
+use crate::markdown::Markdown;
 
 fn main() {
-    let markdown = "__Foo__ and *bar*.\n\nAnother paragraph.";
-    let mut tokens = Tokenizer::tokenize(markdown);
-    let node = Parser::match_tokens(&mut tokens).unwrap();
-    let html = Visitor::visit(node);
-    println!("{}", html);
+    let markdown = "__Foo__ and *bar*.\nAnother paragraph.";
+    let html = Markdown::parse_and_save(markdown, "./output.html");
 }
