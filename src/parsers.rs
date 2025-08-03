@@ -3,11 +3,20 @@ use crate::tokenizer::*;
 struct Node {
     type_: NodeType,
     value: String,
+    children: Vec<Node>,
 }
 
 impl Node {
     fn new(type_: NodeType, value: String) -> Node {
-        Node { type_, value }
+        Node {
+            type_,
+            value,
+            children: Vec::new(),
+        }
+    }
+
+    fn new_paragraph() -> Node {
+        Self::new(NodeType::Paragraph, "".to_string())
     }
 }
 
@@ -16,6 +25,8 @@ enum NodeType {
     Text,
     Emphasize,
     Bold,
+
+    Paragraph,
 }
 
 trait Parser {
@@ -26,6 +37,7 @@ struct TextParser;
 struct BoldParser;
 struct EmphasizeParser;
 struct SentenceParser;
+struct ParagraphParser;
 
 impl Parser for TextParser {
     fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node> {
@@ -112,9 +124,60 @@ impl Parser for SentenceParser {
     }
 }
 
+impl Parser for ParagraphParser {
+    fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node> {
+        if tokens.is_empty() {
+            return None;
+        };
+
+        let mut paragraph = Node::new_paragraph();
+        while let Some(node) = SentenceParser::match_tokens(tokens) {
+            paragraph.children.push(node);
+        }
+        match (&tokens[0].type_, &tokens[1].type_) {
+            (TokenType::Newline, TokenType::Newline) => {
+                tokens.drain(0..2);
+                Some(paragraph)
+            }
+            (TokenType::Newline, TokenType::Eof) => {
+                tokens.drain(0..2);
+                Some(paragraph)
+            }
+            _ => None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests_parsers {
     use super::*;
+
+    fn assert_vecs(vec1: &Vec<Node>, vec2: &Vec<Node>) {
+        assert!(vec1.len() == vec2.len());
+        for i in 0..vec1.len() {
+            assert!(vec1[i].type_ == vec2[i].type_);
+            assert!(vec1[i].value == vec2[i].value);
+        }
+    }
+
+    #[test]
+    fn paragraph() {
+        let markdown = "__Foo__ and *bar*\n\n";
+        let mut tokens = Tokenizer::tokenize(markdown);
+        let result = ParagraphParser::match_tokens(&mut tokens);
+        let expected_children = vec![
+            Node::new(NodeType::Bold, "Foo".to_string()),
+            Node::new(NodeType::Text, " and ".to_string()),
+            Node::new(NodeType::Emphasize, "bar".to_string()),
+        ];
+        assert!(result.is_some());
+        let result: Node = result.unwrap();
+
+        assert!(result.type_ == NodeType::Paragraph);
+        assert!(result.value == "".to_string());
+
+        assert_vecs(&result.children, &expected_children);
+    }
 
     #[test]
     fn text_simple() {
@@ -147,7 +210,7 @@ mod tests_parsers {
 
         let result = TextParser::match_tokens(&mut tokens);
         assert!(result.is_none());
-        assert!(tokens.len() == 4) // Should consume matched token
+        assert!(tokens.len() == 4) // Should not consume any tokens
     }
 
     #[test]
