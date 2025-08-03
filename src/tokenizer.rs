@@ -17,19 +17,11 @@ impl Token {
             value: String::from("<EOF>"),
         }
     }
-
-    pub fn dummy() -> Token {
-        Token {
-            type_: TokenType::Dummy,
-            value: String::from("<DUMMY>"),
-        }
-    }
 }
 
 #[derive(PartialEq)]
 pub enum TokenType {
     Eof,
-    Dummy, // temporary
     // Simple
     Underscore,
     Star,
