@@ -34,10 +34,11 @@ enum NodeType {
     Body,
 }
 
-trait Parser {
+trait BaseParser {
     fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node>;
 }
 
+struct Parser;
 struct TextParser;
 struct BoldParser;
 struct EmphasizeParser;
@@ -45,7 +46,13 @@ struct SentenceParser;
 struct ParagraphParser;
 struct BodyParser;
 
-impl Parser for TextParser {
+impl BaseParser for Parser {
+    fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node> {
+        BodyParser::match_tokens(tokens)
+    }
+}
+
+impl BaseParser for TextParser {
     fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node> {
         if tokens.is_empty() {
             return None;
@@ -60,7 +67,7 @@ impl Parser for TextParser {
     }
 }
 
-impl Parser for EmphasizeParser {
+impl BaseParser for EmphasizeParser {
     fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node> {
         if tokens.len() < 3 {
             return None;
@@ -83,7 +90,7 @@ impl Parser for EmphasizeParser {
     }
 }
 
-impl Parser for BoldParser {
+impl BaseParser for BoldParser {
     fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node> {
         if tokens.len() < 5 {
             return None;
@@ -114,7 +121,7 @@ impl Parser for BoldParser {
     }
 }
 
-impl Parser for SentenceParser {
+impl BaseParser for SentenceParser {
     fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node> {
         let parsers: Vec<fn(&mut Vec<Token>) -> Option<Node>> = vec![
             EmphasizeParser::match_tokens,
@@ -130,7 +137,7 @@ impl Parser for SentenceParser {
     }
 }
 
-impl Parser for ParagraphParser {
+impl BaseParser for ParagraphParser {
     fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node> {
         if tokens.is_empty() {
             return None;
@@ -160,7 +167,7 @@ impl Parser for ParagraphParser {
     }
 }
 
-impl Parser for BodyParser {
+impl BaseParser for BodyParser {
     fn match_tokens(tokens: &mut Vec<Token>) -> Option<Node> {
         if tokens.is_empty() {
             return None;
