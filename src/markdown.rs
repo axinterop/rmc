@@ -1,6 +1,3 @@
-use std::fs::File;
-use std::io::Write;
-
 use crate::parsers::*;
 use crate::tokenizer::*;
 use crate::visitors::*;
@@ -16,10 +13,5 @@ impl Markdown {
         } else {
             panic!("Markdown::parse: node is None");
         }
-    }
-    pub fn parse_and_save(markdown: &str, path: &str) -> std::io::Result<()> {
-        let html = Self::parse(markdown);
-        let mut output = File::create(path)?;
-        write!(output, "{}", html)
     }
 }

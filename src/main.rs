@@ -1,11 +1,23 @@
-mod markdown;
-mod parsers;
-mod tokenizer;
-mod visitors;
+use argh::FromArgs;
+use rmc::Markdown;
 
-use crate::markdown::Markdown;
+#[derive(FromArgs)]
+/// rmc - Rust Markdown Compiler
+struct Args {
+    /// input file with markdown content
+    #[argh(positional)]
+    input: String,
 
-fn main() {
-    let markdown = "__Foo__ and *bar*.\nAnother paragraph.";
-    let html = Markdown::parse_and_save(markdown, "./output.html");
+    /// output file where HTML will be saved
+    #[argh(positional)]
+    output: String,
+}
+
+fn main() -> std::io::Result<()> {
+    let args: Args = argh::from_env();
+    let input = std::fs::read_to_string(&args.input).expect("Failed to read input file");
+    let html = Markdown::parse(&input);
+    std::fs::write(&args.output, html).expect("Failed to write to output file");
+    println!("Successfully converted {} to {}", args.input, args.output);
+    Ok(())
 }
